@@ -16,6 +16,7 @@ _global_script_class_icons={
 [application]
 
 config/name="Taller 6"
+run/main_scene="res://characters/player/HandVR.tscn"
 config/icon="res://icon.png"
 
 [rendering]
