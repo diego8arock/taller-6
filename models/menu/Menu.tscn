@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://models/menu/Menu.gd" type="Script" id=1]
+[ext_resource path="res://models/panel/Panel.tscn" type="PackedScene" id=2]
+
+[node name="Menu" type="Spatial"]
+script = ExtResource( 1 )
+panels = ExtResource( 2 )
+
+[node name="PanelContainer" type="Spatial" parent="."]
+
+[node name="Camera" type="Camera" parent="."]
+transform = Transform( 1, 0, 0, 0, 0.910657, 0.413163, 0, -0.413163, 0.910657, 0, 1.88588, 3.06718 )
+

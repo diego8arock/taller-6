@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="PrismMesh" id=1]
+
+[node name="Panel" type="Spatial"]
+
+[node name="KinematicBody" type="KinematicBody" parent="."]
+
+[node name="MeshInstance" type="MeshInstance" parent="KinematicBody"]
+transform = Transform( -4.20583e-08, 0, 0.962183, 0, 0.962183, 0, -0.962183, 0, -4.20583e-08, 0, 0, 0 )
+mesh = SubResource( 1 )
+material/0 = null
+
