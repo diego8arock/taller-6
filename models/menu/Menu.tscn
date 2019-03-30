@@ -5,10 +5,12 @@
 
 [node name="Menu" type="Spatial"]
 script = ExtResource( 1 )
-panels = ExtResource( 2 )
+panel = ExtResource( 2 )
+partition = 10
+radius = 2
 
 [node name="PanelContainer" type="Spatial" parent="."]
 
 [node name="Camera" type="Camera" parent="."]
-transform = Transform( 1, 0, 0, 0, 0.910657, 0.413163, 0, -0.413163, 0.910657, 0, 1.88588, 3.06718 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.280727, 4.9374 )
 
