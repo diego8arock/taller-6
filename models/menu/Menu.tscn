@@ -6,7 +6,6 @@
 [node name="Menu" type="Spatial"]
 script = ExtResource( 1 )
 panel = ExtResource( 2 )
-partition = 10
 radius = 2
 
 [node name="PanelContainer" type="Spatial" parent="."]
