@@ -1,4 +1,4 @@
-extends KinematicBody
+extends Area
 
 enum PANEL_TYPE {
 		IMAGE,

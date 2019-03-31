@@ -26,7 +26,10 @@ var partition : int
 var image_files = []
 var video_files = []
 var model_files = []
+var rotate : float = 0.0
+var angular_speed : float = 0.03
 
+#Native methods
 func _ready():
 	read_files()
 	partition = total_files
@@ -48,8 +51,9 @@ func _ready():
 		panelNew.transform.origin[0] = posx
 		panelNew.transform.origin[1] = posy
 		var mesh = panelNew.get_node("Mesh")
+		var collision = panelNew.get_node("Collision")
 		mesh.transform = mesh.transform.scaled(vector_scalar)
-		
+		collision.transform = collision.transform.scaled(vector_scalar)
 		index_for_files += 1	
 		match panel_type:
 			PANEL_TYPE.IMAGE:
@@ -67,6 +71,24 @@ func _ready():
 		panelNew.set_panel_type(panel_type)
 	pass 
 
+func _process(delta):
+	$PanelContainer.rotate(Vector3(0,0,1),rotate)
+	for panel in $PanelContainer.get_children():
+		rotate_panel(panel)
+	pass
+	
+func _unhandled_key_input(event):
+	if event.is_action_pressed("ui_left"):
+		rotate -= angular_speed
+	if event.is_action_released("ui_left"):
+		rotate += angular_speed
+	if event.is_action_pressed("ui_right"):
+		rotate += angular_speed
+	if event.is_action_released("ui_right"):
+		rotate -= angular_speed
+	pass
+
+#Public methods
 func to_radian(angle) -> float:
 	return angle * PI / 180
 	
@@ -87,5 +109,6 @@ func read_directory(file_path, file_extension) -> Array:
 				file_list.append(file)
 			file = dir.get_next()
 	return file_list
-	
-	
+
+func rotate_panel(panel) -> void:
+	panel.look_at(Vector3(1,0,1),Vector3(0,1,0))
