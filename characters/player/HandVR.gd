@@ -3,22 +3,27 @@ extends KinematicBody
 const vrpnClient = preload("res://bin/vrpnClient.gdns")
 var clientGlove = null
 var clientTracker = null
-
+export var threshold : float = 1.0
+var fist_values = []
 var motion = Vector3()
 const UP = Vector3(0,1,0)
 
 func _ready():
 	print(vrpnClient)
-	#clientGlove = vrpnClient.new()
-	#clientGlove.connect("Glove14Right@localhost")
-	clientTracker = vrpnClient.new()
-	clientTracker.connect("Tracker0@localhost")
+	clientGlove = vrpnClient.new()
+	clientGlove.connect("Glove14Right@localhost")
+	#clientTracker = vrpnClient.new()
+	#clientTracker.connect("Tracker0@localhost")
+	fist_values = [3.6, 4.5, 6.3, 2.5, 10.0, 7.5, 2.2, 9.4, 7.5, 3.9, 3.7, 6.6, 3.3, 6.5]
 
 func _process(delta):
 	
-	clientTracker.mainloop()
-	process_quat()
-	process_pos()
+	#clientTracker.mainloop()
+	clientGlove.mainloop()
+	#process_quat()
+	#process_pos()
+	
+	
 
 
 func process_pos():
@@ -47,3 +52,22 @@ func process_quat():
 	#rotate(Vector3(1,0,0), quatx / 10)
 	#rotate(Vector3(0,1,0), quaty / 10)
 	rotate(Vector3(0,0,1), quaty / 10)
+
+
+func _on_Timer_timeout():
+	var is_fist = true
+	print("Start Processing...")
+	#print( clientGlove.analog.size())
+	if(clientGlove.analog.size() == 14):
+		for t in range(fist_values.size()):
+			var value = fist_values[t] 
+			var tracker = clientGlove.analog[t] * 10
+			#print( tracker)
+			if tracker < value + threshold and tracker > value - threshold:
+				is_fist = is_fist and true
+			else:
+				is_fist = is_fist and false
+		if is_fist:
+			show()
+		else:
+			hide()

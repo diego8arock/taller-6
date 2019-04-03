@@ -12,6 +12,7 @@ export var panel : PackedScene = null
 export var radius : int = 3
 export var scalar : float = 1.0
 export var proportion : float = 0.03
+export var angular_speed : float = 0.03
 
 #Local constants
 const DEGREES_CIRCLE : float = 360.0
@@ -27,7 +28,6 @@ var image_files = []
 var video_files = []
 var model_files = []
 var rotate : float = 0.0
-var angular_speed : float = 0.001
 var is_image_shown : bool = false
 var is_video_shown : bool = false
 var is_model_shown : bool = false 
@@ -36,15 +36,60 @@ var rotateX : float = 0.0
 var rotateY : float = 0.0
 var rotateZ : float = 0.0
 
+#VR variables
+const vrpnClient = preload("res://bin/vrpnClient.gdns")
+const vrpnClient2 = preload("res://bin/vrpnClient.gdns")
+var clientGlove = null
+var clientTracker = null
+export var rotate_sensitiviy : float = 10.0
+var fist_values = []
+var is_using_tracker : bool = false
+var is_using_glove : bool = false
+export var threshold : float = 2.0
+
 #Native methods
 func _ready():
 	$MeshInstance.hide()
+	#setup_vr()
 	read_files()
 	draw_folders() 
+	print("End ready...")
 
 func _process(delta):
+		
+	if is_using_glove:
+		clientGlove.mainloop()
+		var is_fist = true;
+		#print(clientGlove.analog.size())
+		if(clientGlove.analog.size() == 14):
+			for t in range(fist_values.size()):
+				var value = fist_values[t] 
+				var tracker = clientGlove.analog[t] * 10
+				#print( tracker)
+				if tracker < value + threshold and tracker > value - threshold:
+					is_fist = is_fist and true
+				else:
+					is_fist = is_fist and false
+			if is_fist:
+				if is_menu_shown:
+					show_selected_node()
+			else:
+				cancel()
+				
+	if is_using_tracker:
+		#print(clientTracker.quat)
+		clientTracker.mainloop()
+		if clientTracker.quat[0] == 0 and clientTracker.quat[1] == 0 and clientTracker.quat[2] == 0:
+			return
+			
+		#var quatx = clientTracker.quat[0]
+		var quaty = clientTracker.quat[1]
+		#var quatz = clientTracker.quat[2]
+		print(quaty)
+		rotate = quaty
+		rotate_sensitiviy = 10
 	if is_menu_shown:
-		$PanelContainer.rotate(Vector3(0,0,1),rotate)
+		$PanelContainer.rotate(Vector3(0,0,1),rotate / rotate_sensitiviy)
 		for panel in $PanelContainer.get_children():
 			rotate_panel(panel)
 	if is_model_shown:
@@ -62,17 +107,7 @@ func _unhandled_key_input(event):
 			show_selected_node()
 	else:
 		if event.is_action_pressed("ui_cancel"):
-			if is_model_shown:
-				$Spatial.hide()
-			if is_image_shown:
-				$TextureRect.hide()
-			if is_video_shown:
-				$VideoPlayer.stop()
-				$VideoPlayer.hide()
-			is_menu_shown = true
-			is_video_shown = false
-			is_model_shown = false
-			is_image_shown = false
+			cancel()
 
 		if is_video_shown:
 			if event.is_action_pressed("start_stop_video"):
@@ -93,7 +128,29 @@ func _unhandled_key_input(event):
 			
 	
 
-#Public methods
+#Public method
+func cancel() -> void:
+	if is_model_shown:
+		$Spatial.hide()
+	if is_image_shown:
+		$TextureRect.hide()
+	if is_video_shown:
+		$VideoPlayer.stop()
+		$VideoPlayer.hide()
+	is_menu_shown = true
+	is_video_shown = false
+	is_model_shown = false
+	is_image_shown = false
+			
+func setup_vr() -> void:
+	if is_using_glove:
+		clientGlove = vrpnClient.new()
+		clientGlove.connect("Glove14Left@localhost")
+		fist_values = [3.6, 4.5, 6.3, 2.5, 10.0, 7.5, 2.2, 9.4, 7.5, 3.9, 3.7, 6.6, 3.3, 6.5]
+	if is_using_tracker:
+		clientTracker = vrpnClient2.new()
+		clientTracker.connect("Tracker0@localhost")
+
 func draw_folders() -> void:
 	partition = total_files	
 	for x in range(partition - 1):
@@ -155,6 +212,7 @@ func rotate_panel(panel) -> void:
 	panel.look_at(Vector3(1,0,1),Vector3(0,1,0))
 	
 func show_selected_node() ->void:
+	print("Show node...")
 	var panel = $"/root/GlobalFunctions".selected_panel
 	var type = panel.type
 	var file = panel.file
@@ -182,3 +240,15 @@ func show_selected_node() ->void:
 			
 			
 			
+
+func _on_TimerTracker_timeout():
+	clientTracker = vrpnClient2.new()
+	clientTracker.connect("Tracker0@localhost")
+	is_using_tracker = true;
+
+
+func _on_TimerGlove_timeout():
+	clientGlove = vrpnClient.new()
+	clientGlove.connect("Glove14Right@localhost")
+	fist_values = [3.6, 4.5, 6.3, 2.5, 10.0, 7.5, 2.2, 9.4, 7.5, 3.9, 3.7, 6.6, 3.3, 6.5]
+	is_using_glove = true

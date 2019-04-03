@@ -5,6 +5,8 @@ func _ready():
 	set_position(Vector2(size.x/2,size.y/2))
 
 func adjust_position() -> void:
+	var viewport_size = get_viewport().get_size()
+	set_position(Vector2(viewport_size.x/2, viewport_size.y/2))
 	var texture_size = get_texture().get_size()
 	var width = texture_size.x / 2
 	var height = texture_size.y / 2
