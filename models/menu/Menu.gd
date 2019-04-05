@@ -12,7 +12,7 @@ export var panel : PackedScene = null
 export var radius : int = 3
 export var scalar : float = 1.0
 export var proportion : float = 0.03
-export var angular_speed : float = 0.03
+export var angular_speed : float = 0.02
 
 #Local constants
 const DEGREES_CIRCLE : float = 360.0
@@ -42,10 +42,14 @@ const vrpnClient2 = preload("res://bin/vrpnClient.gdns")
 var clientGlove = null
 var clientTracker = null
 export var rotate_sensitiviy : float = 10.0
+export var traslate_y_sensitiviy : float = 150.0
+export var traslate_z_sensitiviy : float = 150.0
 var fist_values = []
 var is_using_tracker : bool = false
 var is_using_glove : bool = false
 export var threshold : float = 2.0
+export var threshold_thumb : float = 2.0
+var thumb_values = [3.8, 2.7, 6.5]
 
 #Native methods
 func _ready():
@@ -60,7 +64,7 @@ func _process(delta):
 	if is_using_glove:
 		clientGlove.mainloop()
 		var is_fist = true;
-		#print(clientGlove.analog.size())
+		#print(clientGlove.analog)
 		if(clientGlove.analog.size() == 14):
 			for t in range(fist_values.size()):
 				var value = fist_values[t] 
@@ -76,6 +80,57 @@ func _process(delta):
 			else:
 				cancel()
 				
+			if is_video_shown:
+				var is_thumb = true
+				var value = thumb_values[1]
+				var tracker = clientGlove.analog[1] * 10
+				#print("value: " + str(value) + " tracker: " + str(tracker))
+				if tracker < value + threshold_thumb and tracker > value - threshold_thumb:
+					is_thumb = is_thumb and true
+				else:
+					is_thumb = is_thumb and false
+
+				if $VideoPlayer.is_playing() and is_thumb:
+					$VideoPlayer.paused = true	
+				if $VideoPlayer.paused == true and not is_thumb:
+					$VideoPlayer.paused = false
+			
+			if is_model_shown:
+				$Spatial.transform.origin[0] = $KinematicBody.transform.origin[0]
+				$Spatial.transform.origin[1] = $KinematicBody.transform.origin[1]
+				$Spatial.transform.origin[2] = $KinematicBody.transform.origin[2]
+				var posy = clientTracker.pos[1] / (traslate_z_sensitiviy * 10)
+				var posz = clientTracker.pos[2] / (traslate_z_sensitiviy * 10)
+				
+				if posy > 0:
+					rotateY = angular_speed / 50
+				else:
+					rotateY = (angular_speed / 50) * -1
+
+				if posz > 0:
+					rotateZ = angular_speed / 50
+				else:
+					rotateZ = (angular_speed / 50) * -1
+
+				var is_thumb = true
+				var value = thumb_values[1]
+				var tracker = clientGlove.analog[1] * 10
+				#print("value: " + str(value) + " tracker: " + str(tracker))
+				if tracker < value + threshold_thumb and tracker > value - threshold_thumb:
+					is_thumb = is_thumb and true
+				else:
+					is_thumb = is_thumb and false
+					
+				#print(is_thumb)
+				if is_thumb:
+					if posy > 0:
+						rotateX = angular_speed / 50
+					else:
+						rotateX = (angular_speed / 50) * -1
+				else:
+					rotateX = 0
+						
+				
 	if is_using_tracker:
 		#print(clientTracker.quat)
 		clientTracker.mainloop()
@@ -85,9 +140,13 @@ func _process(delta):
 		#var quatx = clientTracker.quat[0]
 		var quaty = clientTracker.quat[1]
 		#var quatz = clientTracker.quat[2]
-		print(quaty)
+		#print(quaty)
 		rotate = quaty
-		rotate_sensitiviy = 10
+		
+		var posy = clientTracker.pos[1] / traslate_y_sensitiviy
+		var posz = clientTracker.pos[2] / traslate_z_sensitiviy
+		if is_menu_shown:
+			move_camera(posy, posz)
 	if is_menu_shown:
 		$PanelContainer.rotate(Vector3(0,0,1),rotate / rotate_sensitiviy)
 		for panel in $PanelContainer.get_children():
@@ -212,7 +271,7 @@ func rotate_panel(panel) -> void:
 	panel.look_at(Vector3(1,0,1),Vector3(0,1,0))
 	
 func show_selected_node() ->void:
-	print("Show node...")
+	#print("Show node...")
 	var panel = $"/root/GlobalFunctions".selected_panel
 	var type = panel.type
 	var file = panel.file
@@ -238,17 +297,20 @@ func show_selected_node() ->void:
 			$Spatial.add_child(model)
 			is_model_shown = true
 			
-			
+func move_camera(posy, posz) -> void:
+	#$Camera.translate(Vector3(0,-posz,posy))
+	$KinematicBody.move_and_collide(Vector3(0,-posz,posy),false)
 			
 
 func _on_TimerTracker_timeout():
 	clientTracker = vrpnClient2.new()
-	clientTracker.connect("Tracker0@localhost")
+	clientTracker.connect("Tracker0@10.3.137.218")
 	is_using_tracker = true;
 
 
 func _on_TimerGlove_timeout():
 	clientGlove = vrpnClient.new()
 	clientGlove.connect("Glove14Right@localhost")
-	fist_values = [3.6, 4.5, 6.3, 2.5, 10.0, 7.5, 2.2, 9.4, 7.5, 3.9, 3.7, 6.6, 3.3, 6.5]
+	fist_values = [3.6, 4.5, 6.3, 2.5, 10.0, 7.5, 2.2, 9.4, 7.5, 3.9, 3.7, 6.6, 3.3, 6.5] #luis
+	#fist_values = [3.9, 7.1, 6.0, 2.3, 10.0, 7.6, 2.5, 9.4, 7.5, 3.9, 3.7, 6.6, 3.3, 6.5] #diego
 	is_using_glove = true

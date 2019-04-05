@@ -1,20 +1,71 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=22 format=2]
 
 [ext_resource path="res://models/menu/Menu.gd" type="Script" id=1]
 [ext_resource path="res://models/panel/Panel.tscn" type="PackedScene" id=2]
 [ext_resource path="res://models/menu/OpenZone.gd" type="Script" id=3]
 [ext_resource path="res://models/menu/VideoPlayer.gd" type="Script" id=4]
 [ext_resource path="res://models/menu/TextureRect.gd" type="Script" id=5]
+[ext_resource path="res://assets/img/muro.jpg" type="Texture" id=6]
+[ext_resource path="res://assets/img/piso.jpg" type="Texture" id=7]
+
+[sub_resource type="PrismMesh" id=3]
+
+[sub_resource type="SpatialMaterial" id=4]
+albedo_color = Color( 0.882353, 0.411765, 0.854902, 1 )
+
+[sub_resource type="BoxShape" id=6]
+extents = Vector3( 0.219239, 0.315579, 0.420008 )
 
 [sub_resource type="SphereMesh" id=1]
 
 [sub_resource type="BoxShape" id=2]
 extents = Vector3( 0.228585, 0.130773, 0.207117 )
 
+[sub_resource type="BoxShape" id=5]
+extents = Vector3( 3.59715, 6.89452, 0.195888 )
+
+[sub_resource type="PlaneMesh" id=9]
+
+[sub_resource type="SpatialMaterial" id=10]
+albedo_texture = ExtResource( 6 )
+
+[sub_resource type="QuadMesh" id=11]
+
+[sub_resource type="SpatialMaterial" id=12]
+albedo_texture = ExtResource( 6 )
+
+[sub_resource type="PlaneMesh" id=13]
+
+[sub_resource type="SpatialMaterial" id=14]
+albedo_texture = ExtResource( 6 )
+
+[sub_resource type="PlaneMesh" id=7]
+
+[sub_resource type="SpatialMaterial" id=8]
+albedo_texture = ExtResource( 7 )
+
 [node name="Menu" type="Spatial"]
 script = ExtResource( 1 )
 panel = ExtResource( 2 )
 radius = 2
+rotate_sensitiviy = 150.0
+traslate_y_sensitiviy = 170.0
+traslate_z_sensitiviy = 170.0
+threshold_thumb = 0.5
+
+[node name="KinematicBody" type="KinematicBody" parent="."]
+transform = Transform( 1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, -0.189273, 2.7704 )
+
+[node name="Camera" type="Camera" parent="KinematicBody"]
+transform = Transform( 1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, -2.167, 0.47 )
+
+[node name="MeshInstance" type="MeshInstance" parent="KinematicBody"]
+transform = Transform( 0.25, 0, 0, 0, 0.25, 0, 0, 0, 0.025, 0, -0.000146151, 0.000393361 )
+mesh = SubResource( 3 )
+material/0 = SubResource( 4 )
+
+[node name="CollisionShape" type="CollisionShape" parent="KinematicBody"]
+shape = SubResource( 6 )
 
 [node name="MeshInstance" type="MeshInstance" parent="."]
 transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0 )
@@ -22,9 +73,6 @@ mesh = SubResource( 1 )
 material/0 = null
 
 [node name="PanelContainer" type="Spatial" parent="."]
-
-[node name="Camera" type="Camera" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.280727, 4.9374 )
 
 [node name="OpenZone" type="Area" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0 )
@@ -52,9 +100,71 @@ one_shot = true
 autostart = true
 
 [node name="TimerGlove" type="Timer" parent="."]
-wait_time = 7.0
+wait_time = 2.0
 one_shot = true
 autostart = true
+
+[node name="StaticBody" type="StaticBody" parent="."]
+editor/display_folded = true
+
+[node name="CollisionShape" type="CollisionShape" parent="StaticBody"]
+shape = SubResource( 5 )
+
+[node name="MeshInstance" type="MeshInstance" parent="StaticBody"]
+transform = Transform( 5, 0, 0, 0, -4.37114e-08, -5, 0, 1, -2.18557e-07, 0, 0, -0.928148 )
+mesh = SubResource( 9 )
+material/0 = SubResource( 10 )
+
+[node name="StaticBody2" type="StaticBody" parent="."]
+editor/display_folded = true
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 9.10496 )
+
+[node name="CollisionShape" type="CollisionShape" parent="StaticBody2"]
+shape = SubResource( 5 )
+
+[node name="StaticBody3" type="StaticBody" parent="."]
+editor/display_folded = true
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.29918 )
+
+[node name="CollisionShape" type="CollisionShape" parent="StaticBody3"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 2.26853, 0, 0 )
+shape = SubResource( 5 )
+
+[node name="MeshInstance" type="MeshInstance" parent="StaticBody3"]
+transform = Transform( -4.37114e-07, 0, -1, 0, 10, 0, 10, 0, -4.37114e-08, 4.59277, 0.022037, -0.297906 )
+mesh = SubResource( 11 )
+material/0 = SubResource( 12 )
+
+[node name="StaticBody4" type="StaticBody" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -4.44136, 0, 3.29918 )
+
+[node name="CollisionShape" type="CollisionShape" parent="StaticBody4"]
+transform = Transform( -4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 2.26853, 0, 0 )
+shape = SubResource( 5 )
+
+[node name="MeshInstance" type="MeshInstance" parent="StaticBody4"]
+transform = Transform( -2.18557e-07, 5, 0, 2.18557e-07, 9.55343e-15, -5, -5, -2.18557e-07, -2.18557e-07, 0, 0, 0 )
+mesh = SubResource( 13 )
+material/0 = SubResource( 14 )
+
+[node name="StaticBody5" type="StaticBody" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -4.44136, 0, 3.29918 )
+
+[node name="CollisionShape" type="CollisionShape" parent="StaticBody5"]
+transform = Transform( 1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 4.13518, 3.03718, 0 )
+shape = SubResource( 5 )
+
+[node name="StaticBody6" type="StaticBody" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -4.44136, -5.73362, 3.29918 )
+
+[node name="CollisionShape" type="CollisionShape" parent="StaticBody6"]
+transform = Transform( 1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 4.13518, 3.03718, 0 )
+shape = SubResource( 5 )
+
+[node name="Piso" type="MeshInstance" parent="."]
+transform = Transform( 5, 0, 0, 0, 1, 0, 0, 0, 5, 0, -5.21547, 2.88271 )
+mesh = SubResource( 7 )
+material/0 = SubResource( 8 )
 
 [connection signal="area_entered" from="OpenZone" to="OpenZone" method="_on_OpenZone_area_entered"]
 [connection signal="area_exited" from="OpenZone" to="OpenZone" method="_on_OpenZone_area_exited"]
