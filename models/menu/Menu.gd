@@ -51,15 +51,26 @@ export var threshold : float = 2.0
 export var threshold_thumb : float = 2.0
 var thumb_values = [3.8, 2.7, 6.5]
 
+var is_using_gamepad : bool = true;
+
 #Native methods
 func _ready():
+	Input.connect("joy_connection_changed", self, "joy_con_changed")
 	$MeshInstance.hide()
-	#setup_vr()
 	read_files()
 	draw_folders() 
-	print("End ready...")
+	
+func joy_con_changed(deviceid, isConnected) -> void:
+	if isConnected:
+		print("Joystick " + str(deviceid))
+		if Input.is_joy_known(0):
+			print ("Recongized controller")
+			print(Input.get_joy_name(0))
 
 func _process(delta):
+	
+	if is_using_gamepad:
+		process_gamepad()	
 		
 	if is_using_glove:
 		clientGlove.mainloop()
@@ -128,8 +139,7 @@ func _process(delta):
 					else:
 						rotateX = (angular_speed / 50) * -1
 				else:
-					rotateX = 0
-						
+					rotateX = 0						
 				
 	if is_using_tracker:
 		#print(clientTracker.quat)
@@ -147,14 +157,73 @@ func _process(delta):
 		var posz = clientTracker.pos[2] / traslate_z_sensitiviy
 		if is_menu_shown:
 			move_camera(posy, posz)
+	
 	if is_menu_shown:
 		$PanelContainer.rotate(Vector3(0,0,1),rotate / rotate_sensitiviy)
 		for panel in $PanelContainer.get_children():
 			rotate_panel(panel)
+			
 	if is_model_shown:
 		$Spatial.rotate(Vector3(0,1,0),rotateY)
 		$Spatial.rotate(Vector3(1,0,0),rotateX)
 		$Spatial.rotate(Vector3(0,0,1),rotateZ)
+	
+var deadZone = 0.2
+func process_gamepad() -> void:
+	if Input.get_connected_joypads().size() > 0:
+		if is_menu_shown:
+			var xAxis = Input.get_joy_axis(0, JOY_AXIS_0)
+			if abs(xAxis) > deadZone:
+				if xAxis < 0:
+					rotate = angular_speed * 10
+				if xAxis > 0:
+					rotate = (angular_speed * 10) * -1
+			else:
+				rotate = 0
+				
+			var yAxis = Input.get_joy_axis(0, JOY_AXIS_1)
+			var zAxis = Input.get_joy_axis(0, JOY_AXIS_2)
+			
+			if abs(yAxis) > deadZone or abs(zAxis) > deadZone:
+				move_camera(yAxis / 200, zAxis / 200)
+				
+			if Input.is_joy_button_pressed(0, JOY_BUTTON_1):
+				show_selected_node()
+		else:
+			if Input.is_joy_button_pressed(0, JOY_BUTTON_0):
+				cancel()
+				
+		if is_video_shown:
+			if  Input.is_joy_button_pressed(0, JOY_BUTTON_3):
+				$VideoPlayer.paused = not $VideoPlayer.paused
+				
+		if is_model_shown:
+			var divisor : float = 2
+			var xAxis = Input.get_joy_axis(0, JOY_AXIS_0)
+			var yAxis = Input.get_joy_axis(0, JOY_AXIS_1)
+			var zAxis = Input.get_joy_axis(0, JOY_AXIS_2)
+			if abs(xAxis) > deadZone:
+				if xAxis < 0:
+					rotateY = angular_speed / divisor
+				if xAxis > 0:
+					rotateY = (angular_speed / divisor) * -1
+			else:
+				rotateY = 0
+			if abs(yAxis) > deadZone:
+				if yAxis < 0:
+					rotateX = angular_speed / divisor
+				if yAxis > 0:
+					rotateX = (angular_speed / divisor) * -1
+			else:
+				rotateX = 0
+			if abs(zAxis) > deadZone:
+				if zAxis < 0:
+					rotateZ = angular_speed / divisor
+				if zAxis > 0:
+					rotateZ = (angular_speed / divisor) * -1
+			else:
+				rotateZ = 0
+		
 	
 func _unhandled_key_input(event):
 	if is_menu_shown:
@@ -166,6 +235,8 @@ func _unhandled_key_input(event):
 			show_selected_node()
 	else:
 		if event.is_action_pressed("ui_cancel"):
+			cancel()
+		if event.is_action_pressed("cancel_button"):
 			cancel()
 
 		if is_video_shown:
@@ -201,15 +272,6 @@ func cancel() -> void:
 	is_model_shown = false
 	is_image_shown = false
 			
-func setup_vr() -> void:
-	if is_using_glove:
-		clientGlove = vrpnClient.new()
-		clientGlove.connect("Glove14Left@localhost")
-		fist_values = [3.6, 4.5, 6.3, 2.5, 10.0, 7.5, 2.2, 9.4, 7.5, 3.9, 3.7, 6.6, 3.3, 6.5]
-	if is_using_tracker:
-		clientTracker = vrpnClient2.new()
-		clientTracker.connect("Tracker0@localhost")
-
 func draw_folders() -> void:
 	partition = total_files	
 	for x in range(partition - 1):
@@ -303,14 +365,16 @@ func move_camera(posy, posz) -> void:
 			
 
 func _on_TimerTracker_timeout():
-	clientTracker = vrpnClient2.new()
-	clientTracker.connect("Tracker0@10.3.137.218")
-	is_using_tracker = true;
+	if is_using_tracker:
+		clientTracker = vrpnClient2.new()
+		clientTracker.connect("Tracker0@10.3.137.218")
+		is_using_tracker = true;
 
 
 func _on_TimerGlove_timeout():
-	clientGlove = vrpnClient.new()
-	clientGlove.connect("Glove14Right@localhost")
-	fist_values = [3.6, 4.5, 6.3, 2.5, 10.0, 7.5, 2.2, 9.4, 7.5, 3.9, 3.7, 6.6, 3.3, 6.5] #luis
-	#fist_values = [3.9, 7.1, 6.0, 2.3, 10.0, 7.6, 2.5, 9.4, 7.5, 3.9, 3.7, 6.6, 3.3, 6.5] #diego
-	is_using_glove = true
+	if is_using_glove:
+		clientGlove = vrpnClient.new()
+		clientGlove.connect("Glove14Right@localhost")
+		fist_values = [3.6, 4.5, 6.3, 2.5, 10.0, 7.5, 2.2, 9.4, 7.5, 3.9, 3.7, 6.6, 3.3, 6.5] #luis
+		#fist_values = [3.9, 7.1, 6.0, 2.3, 10.0, 7.6, 2.5, 9.4, 7.5, 3.9, 3.7, 6.6, 3.3, 6.5] #diego
+		is_using_glove = true
